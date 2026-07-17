@@ -1,6 +1,6 @@
 {
   "name": "@smart-coders-hq/opencode-model-fallback",
-  "version": "0.1.0",
+  "version": "1.3.4",
   "description": "OpenCode plugin for ordered model fallback chains, preemptive redirect, and automatic rate limit recovery.",
   "type": "module",
   "main": "dist/index.js",
@@ -19,8 +19,7 @@
     "lint": "biome lint .",
     "lint:fix": "biome check --write .",
     "format": "biome check --write .",
-    "format:check": "biome ci .",
-    "release": "semantic-release"
+    "format:check": "biome ci ."
   },
   "files": [
     "dist",
@@ -34,17 +33,9 @@
   "devDependencies": {
     "@biomejs/biome": "2.4.7",
     "@opencode-ai/plugin": "^1.2.24",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/exec": "^7.1.0",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^12.0.6",
-    "@semantic-release/npm": "^13.1.5",
-    "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/bun": "^1.3.10",
     "@types/js-yaml": "^4.0.9",
     "js-yaml": "^4.1.0",
-    "semantic-release": "^25.0.3",
     "typescript": "^5.9.3",
     "zod": "^4.3.6"
   },
@@ -68,17 +59,18 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Smart-Coders-HQ/opencode-model-fallback.git"
+    "url": "https://github.com/tmogeid/opencode-model-fallback.git"
   },
-  "author": "Błażej Pawlak <blazej@smartcoders.xyz>",
-  "homepage": "https://github.com/Smart-Coders-HQ/opencode-model-fallback#readme",
+  "author": "Blazej Pawlak <blazej@smartcoders.xyz>",
+  "homepage": "https://github.com/tmogeid/opencode-model-fallback#readme",
   "bugs": {
-    "url": "https://github.com/Smart-Coders-HQ/opencode-model-fallback/issues"
+    "url": "https://github.com/tmogeid/opencode-model-fallback/issues"
   },
   "publishConfig": {
     "access": "public"
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "forkedBy": "tmogeid"
 }

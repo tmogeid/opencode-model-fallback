@@ -9,3 +9,11 @@ dist/
 # Dolt database files (added by bd init)
 .dolt/
 *.db
+
+# Fork cleanup additions
+.env
+.env.local
+*.log
+.DS_Store
+Thumbs.db
+.claude/

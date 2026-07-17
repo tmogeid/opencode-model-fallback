@@ -3,12 +3,12 @@
   "id": "opencode-model-fallback",
   "name": "Model Fallback",
   "description": "OpenCode plugin for ordered model fallback chains, preemptive redirect, and automatic rate limit recovery.",
-  "version": "0.1.0",
+  "version": "1.3.4",
   "entry": "dist/index.js",
   "links": [
     {
       "label": "GitHub",
-      "url": "https://github.com/Smart-Coders-HQ/opencode-model-fallback"
+      "url": "https://github.com/tmogeid/opencode-model-fallback"
     }
   ]
 }
