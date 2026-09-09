@@ -27,7 +27,7 @@ Add the plugin to `~/.config/opencode/opencode.jsonc`:
 
 ```jsonc
 {
-  "plugin": ["@smart-coders-hq/opencode-model-fallback"],
+  "plugin": ["@ichisay/opencode-model-fallback"],
 }
 ```
 
