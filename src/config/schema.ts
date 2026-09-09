@@ -35,6 +35,7 @@ const fallbackDefaults = z.object({
   cooldownMs: z.number().min(10_000).optional(),
   retryOriginalAfterMs: z.number().min(10_000).optional(),
   maxFallbackDepth: z.number().int().min(1).max(10).optional(),
+  strategy: z.enum(["revert", "continue"]).optional(),
 });
 
 const logPathSchema = z
@@ -165,6 +166,20 @@ export function parseConfig(raw: unknown): {
         }
       }
 
+      const strategyResult = fallbackDefaults.shape.strategy.safeParse(defaultsObj.strategy);
+      if (defaultsObj.strategy !== undefined) {
+        if (strategyResult.success && strategyResult.data !== undefined) {
+          parsedDefaults.strategy = strategyResult.data;
+        } else if (!strategyResult.success) {
+          for (const issue of strategyResult.error.issues) {
+            const suffix = issue.path.length > 0 ? `.${formatPath(issue.path)}` : "";
+            warnings.push(
+              `Config warning at defaults.strategy${suffix}: ${issue.message} — using default`
+            );
+          }
+        }
+      }
+
       for (const key of Object.keys(defaultsObj)) {
         if (!Object.hasOwn(fallbackDefaults.shape, key)) {
           warnings.push(`Config warning at defaults.${key}: unknown field — using default`);
@@ -273,6 +288,7 @@ export function mergeWithDefaults(raw: RawConfig): import("../types.js").PluginC
       cooldownMs: raw.defaults?.cooldownMs ?? def.defaults.cooldownMs,
       retryOriginalAfterMs: raw.defaults?.retryOriginalAfterMs ?? def.defaults.retryOriginalAfterMs,
       maxFallbackDepth: raw.defaults?.maxFallbackDepth ?? def.defaults.maxFallbackDepth,
+      strategy: raw.defaults?.strategy ?? def.defaults.strategy,
     },
     agents: raw.agents ?? def.agents,
     patterns: raw.patterns ?? def.patterns,

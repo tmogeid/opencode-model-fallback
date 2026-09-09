@@ -11,7 +11,7 @@ import {
 } from "../resolution/agent-resolver.js";
 import { resolveFallbackModel } from "../resolution/fallback-resolver.js";
 import type { FallbackStore } from "../state/store.js";
-import type { ErrorCategory, ModelKey, PluginConfig } from "../types.js";
+import type { ErrorCategory, FallbackStrategy, ModelKey, PluginConfig } from "../types.js";
 import { convertPartsForPrompt } from "./message-converter.js";
 
 type Client = PluginInput["client"];
@@ -21,6 +21,7 @@ export interface ReplayResult {
   fallbackModel?: ModelKey;
   fromModel?: ModelKey | null;
   error?: string;
+  strategy?: FallbackStrategy;
 }
 
 interface SessionRevertInfo {
@@ -200,6 +201,85 @@ export async function attemptFallback(
     // caught by the dedup window. (recordFallback sets it again on success.)
     sessionState.lastFallbackAt = Date.now();
 
+    const strategy = config.defaults.strategy ?? "revert";
+
+    // Continue strategy: abort the retry loop and dispatch a continuation
+    // directive to the fallback model WITHOUT reverting the session, so
+    // long tasks resume where they left off instead of replaying the prompt.
+    if (strategy === "continue") {
+      try {
+        await client.session.abort({ path: { id: sessionId } });
+        logger.debug("replay.abort.ok", { sessionId });
+      } catch (err) {
+        logger.error("replay.abort.failed", { sessionId, err });
+        return { success: false, error: "abort failed" };
+      }
+
+      const continueText = `[AVISO DE SISTEMA - CONTINUACIÓN DE TAREA]
+El modelo anterior (${currentModel}) fue interrumpido por error de proveedor (${reason}).
+NO repitas el trabajo ya completado. Revisa las respuestas y herramientas ya ejecutadas en esta sesión, comprueba en disco/código si la última acción se completó, y continúa la tarea exactamente desde donde se quedó.`;
+
+      const [continueProviderID, ...continueRest] = fallbackModel.split("/");
+      const continueModelID = continueRest.join("/");
+
+      try {
+        await client.session.prompt({
+          path: { id: sessionId },
+          body: {
+            model: { providerID: continueProviderID, modelID: continueModelID },
+            agent: agentName ?? undefined,
+            parts: [{ type: "text", text: continueText }] as NonNullable<
+              Parameters<typeof client.session.prompt>[0]["body"]
+            >["parts"],
+          },
+        });
+        logger.debug("replay.prompt.ok", { sessionId, fallbackModel });
+      } catch (err) {
+        logger.error("replay.prompt.failed", {
+          sessionId,
+          fallbackModel,
+          err,
+        });
+        return { success: false, error: "prompt failed" };
+      }
+
+      // Capture depth before recordFallback increments it
+      const continueDepth = sessionState.fallbackDepth + 1;
+
+      // Record the successful fallback
+      store.sessions.recordFallback(
+        sessionId,
+        currentModel ?? fallbackModel,
+        fallbackModel,
+        reason,
+        agentName,
+      );
+
+      logger.info("replay.continue.dispatched", {
+        sessionId,
+        fromModel: currentModel,
+        toModel: fallbackModel,
+      });
+
+      logger.info("fallback.success", {
+        sessionId,
+        agentName,
+        agentFile: store.sessions.get(sessionId).agentFile,
+        from: currentModel,
+        to: fallbackModel,
+        reason,
+        depth: continueDepth,
+        strategy: "continue",
+      });
+
+      return {
+        success: true,
+        fallbackModel,
+        fromModel: currentModel,
+        strategy: "continue",
+      };
+    }
+
     // --- abort → revert → prompt sequence ---
 
     // Step 1: Abort retry loop
@@ -290,9 +370,15 @@ export async function attemptFallback(
       to: fallbackModel,
       reason,
       depth: newDepth,
+      strategy: "revert",
     });
 
-    return { success: true, fallbackModel, fromModel: currentModel };
+    return {
+      success: true,
+      fallbackModel,
+      fromModel: currentModel,
+      strategy: "revert",
+    };
   } finally {
     store.sessions.releaseLock(sessionId);
   }

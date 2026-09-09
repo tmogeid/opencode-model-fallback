@@ -61,7 +61,8 @@ Minimal example:
     ],
     "cooldownMs": 300000,
     "retryOriginalAfterMs": 900000,
-    "maxFallbackDepth": 3
+    "maxFallbackDepth": 3,
+    "strategy": "revert"
   },
   "agents": {
     "*": {
@@ -83,8 +84,14 @@ Most important knobs:
 - `defaults.cooldownMs` - how long a rate-limited model stays unavailable
 - `defaults.retryOriginalAfterMs` - when a cooled-down model becomes healthy again
 - `defaults.maxFallbackDepth` - max cascading fallbacks within one message
+- `defaults.strategy` - `"continue"` or `"revert"` (default `"revert"` for compatibility)
 - `agents` - ordered fallback chains per agent
 - `logging`, `logLevel`, `logPath` - structured file logging controls
+
+### Fallback strategy (`defaults.strategy`)
+
+- `"continue"` (recommended for long tasks): does not revert the session. The plugin aborts the retry loop and dispatches a continuation directive to the next model, so it reviews what is already done and resumes the task where it left off.
+- `"revert"` (legacy behavior): reverts the turn and replays the original user prompt with the next model.
 
 Per-agent example:
 

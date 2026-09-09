@@ -26,6 +26,7 @@ export const DEFAULT_CONFIG: PluginConfig = {
     cooldownMs: 300_000, // 5 minutes
     retryOriginalAfterMs: 900_000, // 15 minutes
     maxFallbackDepth: 3,
+    strategy: "revert",
   },
   agents: {
     "*": {

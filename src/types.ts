@@ -47,11 +47,14 @@ export interface AgentConfig {
   fallbackModels: ModelKey[];
 }
 
+export type FallbackStrategy = "revert" | "continue";
+
 export interface FallbackDefaults {
   fallbackOn: ErrorCategory[];
   cooldownMs: number;
   retryOriginalAfterMs: number;
   maxFallbackDepth: number;
+  strategy?: FallbackStrategy;
 }
 
 export interface PluginConfig {
